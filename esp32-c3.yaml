@@ -1,0 +1,265 @@
+esphome:
+  name: esp32_c3
+  platform: ESP32
+  board: esp32-c3-devkitm-1
+  platformio_options:
+    platform: https://github.com/platformio/platform-espressif32.git#feature/arduino-upstream
+    platform_packages:
+      - framework-arduinoespressif32@https://github.com/espressif/arduino-esp32.git#2.0.0
+    board_build.variant: esp32c3
+    board_build.f_cpu: 160000000L
+    board_build.f_flash: 40000000L
+    upload_protocol: esptool
+    board_build.flash_mode: dio
+
+wifi:
+  ssid: "WIFI_SSID"
+  password: "password"
+
+captive_portal:
+
+logger:
+
+api:
+  password: 'esp485'
+
+ota:
+  password: 'esp485'
+
+web_server:
+  port: 80
+
+time:
+  - platform: sntp
+    id: esp485_time
+
+uart:
+  id: esp485_uart
+  rx_pin: 18
+  tx_pin: 19
+  baud_rate: 9600
+  data_bits: 8
+  stop_bits: 1
+
+modbus:
+  id: esp485_modbus
+  send_wait_time: 200ms
+
+modbus_controller:
+  - id: esp485_modbus_controller
+    modbus_id: esp485_modbus
+    address: 0x01 #设备地址码 电表1（一般是1根据实际情况填）#
+    command_throttle: 200ms
+    setup_priority: -10
+    update_interval: 10s
+  - id: esp485_modbus_controller2
+    modbus_id: esp485_modbus
+    address: 0x02 #设备地址码 电表2  ddsu666 可以简单通过按钮长按修改地址，添加多块电表，并联至485总线
+    command_throttle: 200ms
+    setup_priority: -9
+    update_interval: 10s
+
+sensor:
+  - platform: modbus_controller
+    modbus_controller_id: esp485_modbus_controller
+    id: esp485_modbus_u
+    name: "U"
+    address: 0x2000
+    register_count: 2
+    unit_of_measurement: "V"
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: 1
+    device_class: voltage
+
+  - platform: modbus_controller
+    modbus_controller_id: esp485_modbus_controller
+    id: esp485_modbus_i
+    name: "I"
+    address: 0x2002
+    register_count: 2
+    unit_of_measurement: "A"
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: 3
+    device_class: current
+
+  - platform: modbus_controller
+    modbus_controller_id: esp485_modbus_controller
+    id: esp485_modbus_p
+    name: "P"
+    address: 0x2004
+    register_count: 2
+    unit_of_measurement: "W"
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: 1
+    filters:
+      - multiply: 1000
+    device_class: power
+
+  - platform: modbus_controller
+    modbus_controller_id: esp485_modbus_controller
+    id: esp485_modbus_q
+    name: "Q"
+    address: 0x2006
+    register_count: 2
+    unit_of_measurement: "var"
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: 1
+    filters:
+      - multiply: 1000
+    device_class: power
+
+  - platform: modbus_controller
+    modbus_controller_id: esp485_modbus_controller
+    id: esp485_modbus_s
+    name: "S"
+    address: 0x2008
+    register_count: 2
+    unit_of_measurement: "VA"
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: 1
+    filters:
+      - multiply: 1000
+    device_class: power
+
+  - platform: modbus_controller
+    modbus_controller_id: esp485_modbus_controller
+    id: esp485_modbus_pf
+    name: "PF"
+    address: 0x200A
+    register_count: 2
+    unit_of_measurement: "cosΦ" #无法显示可以删除这行#
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: 3
+    device_class: power_factor
+
+  - platform: modbus_controller
+    modbus_controller_id: esp485_modbus_controller
+    id: esp485_modbus_freq
+    name: "Freq"
+    address: 0x200E
+    register_count: 2
+    unit_of_measurement: "Hz"
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: 2
+
+  - platform: modbus_controller
+    modbus_controller_id: esp485_modbus_controller
+    id: esp485_modbus_ep
+    name: "Ep"
+    address: 0x4000
+    register_count: 2
+    unit_of_measurement: "kWh"
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: 2
+    device_class: energy
+    state_class: total_increasing
+  # 电表2
+  - platform: modbus_controller
+    modbus_controller_id: esp485_modbus_controller2
+    id: esp485_modbus_P2_u
+    name: "P2_U"
+    address: 0x2000
+    register_count: 2
+    unit_of_measurement: "V"
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: 1
+    device_class: voltage
+
+  - platform: modbus_controller
+    modbus_controller_id: esp485_modbus_controller2
+    id: esp485_modbus_P2_i
+    name: "P2_I"
+    address: 0x2002
+    register_count: 2
+    unit_of_measurement: "A"
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: 3
+    device_class: current
+
+  - platform: modbus_controller
+    modbus_controller_id: esp485_modbus_controller2
+    id: esp485_modbus_P2_p
+    name: "P2_P"
+    address: 0x2004
+    register_count: 2
+    unit_of_measurement: "W"
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: 1
+    filters:
+      - multiply: 1000
+    device_class: power
+
+  - platform: modbus_controller
+    modbus_controller_id: esp485_modbus_controller2
+    id: esp485_modbus_P2_q
+    name: "P2_Q"
+    address: 0x2006
+    register_count: 2
+    unit_of_measurement: "var"
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: 1
+    filters:
+      - multiply: 1000
+    device_class: power
+
+  - platform: modbus_controller
+    modbus_controller_id: esp485_modbus_controller2
+    id: esp485_modbus_P2_s
+    name: "P2_S"
+    address: 0x2008
+    register_count: 2
+    unit_of_measurement: "VA"
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: 1
+    filters:
+      - multiply: 1000
+    device_class: power
+
+  - platform: modbus_controller
+    modbus_controller_id: esp485_modbus_controller2
+    id: esp485_modbus_P2_pf
+    name: "P2_PF"
+    address: 0x200A
+    register_count: 2
+    unit_of_measurement: "cosΦ" #无法显示可以删除这行#
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: 3
+    device_class: power_factor
+
+  - platform: modbus_controller
+    modbus_controller_id: esp485_modbus_controller2
+    id: esp485_modbus_P2_freq
+    name: "P2_Freq"
+    address: 0x200E
+    register_count: 2
+    unit_of_measurement: "Hz"
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: 2
+
+  - platform: modbus_controller
+    modbus_controller_id: esp485_modbus_controller2
+    id: esp485_modbus_P2_ep
+    name: "P2_Ep"
+    address: 0x4000
+    register_count: 2
+    unit_of_measurement: "kWh"
+    register_type: holding
+    value_type: FP32
+    accuracy_decimals: 2
+    device_class: energy
+    state_class: total_increasing
