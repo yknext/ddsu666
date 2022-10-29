@@ -46,13 +46,13 @@ modbus:
   send_wait_time: 200ms
 
 modbus_controller:
-  - id: esp485_modbus_controller
+  - id: esp485_modbus_controller_P1
     modbus_id: esp485_modbus
-    address: 0x01 #设备地址码 电表1（一般是1根据实际情况填）#
+    address: 0x01 #设备地址码（一般是1根据实际情况填）#
     command_throttle: 200ms
     setup_priority: -10
     update_interval: 10s
-  - id: esp485_modbus_controller2
+  - id: esp485_modbus_controller_P2
     modbus_id: esp485_modbus
     address: 0x02 #设备地址码 电表2  ddsu666 可以简单通过按钮长按修改地址，添加多块电表，并联至485总线
     command_throttle: 200ms
@@ -61,9 +61,9 @@ modbus_controller:
 
 sensor:
   - platform: modbus_controller
-    modbus_controller_id: esp485_modbus_controller
-    id: esp485_modbus_u
-    name: "U"
+    modbus_controller_id: esp485_modbus_controller_P1
+    id: P1_esp485_modbus_u
+    name: "P1_U"
     address: 0x2000
     register_count: 2
     unit_of_measurement: "V"
@@ -73,9 +73,9 @@ sensor:
     device_class: voltage
 
   - platform: modbus_controller
-    modbus_controller_id: esp485_modbus_controller
-    id: esp485_modbus_i
-    name: "I"
+    modbus_controller_id: esp485_modbus_controller_P1
+    id: P1_esp485_modbus_i
+    name: "P1_I"
     address: 0x2002
     register_count: 2
     unit_of_measurement: "A"
@@ -85,9 +85,9 @@ sensor:
     device_class: current
 
   - platform: modbus_controller
-    modbus_controller_id: esp485_modbus_controller
-    id: esp485_modbus_p
-    name: "P"
+    modbus_controller_id: esp485_modbus_controller_P1
+    id: P1_esp485_modbus_p
+    name: "P1_P"
     address: 0x2004
     register_count: 2
     unit_of_measurement: "W"
@@ -99,9 +99,9 @@ sensor:
     device_class: power
 
   - platform: modbus_controller
-    modbus_controller_id: esp485_modbus_controller
-    id: esp485_modbus_q
-    name: "Q"
+    modbus_controller_id: esp485_modbus_controller_P1
+    id: P1_esp485_modbus_q
+    name: "P1_Q"
     address: 0x2006
     register_count: 2
     unit_of_measurement: "var"
@@ -113,9 +113,9 @@ sensor:
     device_class: power
 
   - platform: modbus_controller
-    modbus_controller_id: esp485_modbus_controller
-    id: esp485_modbus_s
-    name: "S"
+    modbus_controller_id: esp485_modbus_controller_P1
+    id: P1_esp485_modbus_s
+    name: "P1_S"
     address: 0x2008
     register_count: 2
     unit_of_measurement: "VA"
@@ -127,9 +127,9 @@ sensor:
     device_class: power
 
   - platform: modbus_controller
-    modbus_controller_id: esp485_modbus_controller
-    id: esp485_modbus_pf
-    name: "PF"
+    modbus_controller_id: esp485_modbus_controller_P1
+    id: P1_esp485_modbus_pf
+    name: "P1_PF"
     address: 0x200A
     register_count: 2
     unit_of_measurement: "cosΦ" #无法显示可以删除这行#
@@ -139,9 +139,9 @@ sensor:
     device_class: power_factor
 
   - platform: modbus_controller
-    modbus_controller_id: esp485_modbus_controller
-    id: esp485_modbus_freq
-    name: "Freq"
+    modbus_controller_id: esp485_modbus_controller_P1
+    id: P1_esp485_modbus_freq
+    name: "P1_Freq"
     address: 0x200E
     register_count: 2
     unit_of_measurement: "Hz"
@@ -150,9 +150,9 @@ sensor:
     accuracy_decimals: 2
 
   - platform: modbus_controller
-    modbus_controller_id: esp485_modbus_controller
-    id: esp485_modbus_ep
-    name: "Ep"
+    modbus_controller_id: esp485_modbus_controller_P1
+    id: P1_esp485_modbus_ep
+    name: "P1_Ep"
     address: 0x4000
     register_count: 2
     unit_of_measurement: "kWh"
@@ -163,8 +163,8 @@ sensor:
     state_class: total_increasing
   # 电表2
   - platform: modbus_controller
-    modbus_controller_id: esp485_modbus_controller2
-    id: esp485_modbus_P2_u
+    modbus_controller_id: esp485_modbus_controller_P2
+    id: P2_esp485_modbus_u
     name: "P2_U"
     address: 0x2000
     register_count: 2
@@ -175,8 +175,8 @@ sensor:
     device_class: voltage
 
   - platform: modbus_controller
-    modbus_controller_id: esp485_modbus_controller2
-    id: esp485_modbus_P2_i
+    modbus_controller_id: esp485_modbus_controller_P2
+    id: P2_esp485_modbus_i
     name: "P2_I"
     address: 0x2002
     register_count: 2
@@ -187,8 +187,8 @@ sensor:
     device_class: current
 
   - platform: modbus_controller
-    modbus_controller_id: esp485_modbus_controller2
-    id: esp485_modbus_P2_p
+    modbus_controller_id: esp485_modbus_controller_P2
+    id: P2_esp485_modbus_p
     name: "P2_P"
     address: 0x2004
     register_count: 2
@@ -201,8 +201,8 @@ sensor:
     device_class: power
 
   - platform: modbus_controller
-    modbus_controller_id: esp485_modbus_controller2
-    id: esp485_modbus_P2_q
+    modbus_controller_id: esp485_modbus_controller_P2
+    id: P2_esp485_modbus_q
     name: "P2_Q"
     address: 0x2006
     register_count: 2
@@ -215,8 +215,8 @@ sensor:
     device_class: power
 
   - platform: modbus_controller
-    modbus_controller_id: esp485_modbus_controller2
-    id: esp485_modbus_P2_s
+    modbus_controller_id: esp485_modbus_controller_P2
+    id: P2_esp485_modbus_s
     name: "P2_S"
     address: 0x2008
     register_count: 2
@@ -229,8 +229,8 @@ sensor:
     device_class: power
 
   - platform: modbus_controller
-    modbus_controller_id: esp485_modbus_controller2
-    id: esp485_modbus_P2_pf
+    modbus_controller_id: esp485_modbus_controller_P2
+    id: P2_esp485_modbus_pf
     name: "P2_PF"
     address: 0x200A
     register_count: 2
@@ -241,8 +241,8 @@ sensor:
     device_class: power_factor
 
   - platform: modbus_controller
-    modbus_controller_id: esp485_modbus_controller2
-    id: esp485_modbus_P2_freq
+    modbus_controller_id: esp485_modbus_controller_P2
+    id: P2_esp485_modbus_freq
     name: "P2_Freq"
     address: 0x200E
     register_count: 2
@@ -252,8 +252,8 @@ sensor:
     accuracy_decimals: 2
 
   - platform: modbus_controller
-    modbus_controller_id: esp485_modbus_controller2
-    id: esp485_modbus_P2_ep
+    modbus_controller_id: esp485_modbus_controller_P2
+    id: P2_esp485_modbus_ep
     name: "P2_Ep"
     address: 0x4000
     register_count: 2
