@@ -1,12 +1,11 @@
 package main
 
 import (
-	"crypto/tls"
+	"context"
 	"encoding/json"
 	"fmt"
 	scribble "github.com/nanobox-io/golang-scribble"
 	"github.com/robfig/cron/v3"
-	"golang.org/x/net/http2"
 	tele "gopkg.in/telebot.v3"
 	"log"
 	"net"
@@ -23,9 +22,9 @@ var (
 	TimeLocal, _   = time.LoadLocation("Asia/Shanghai")
 	HttpPrefix     = "http://192.168.200.6/sensor/"
 
-	httpClient         *http.Client
-	MaxIdleConnections int = 20
-	RequestTimeout     int = 30
+	httpClient       *http.Client
+	KeepAliveTimeout = 60
+	RequestTimeout   = 30
 )
 
 type ChannelList struct {
@@ -43,13 +42,25 @@ func init() {
 }
 
 func createHttClient() *http.Client {
+	transport := &http.Transport{
+		MaxIdleConnsPerHost: 30,
+		DialContext: func(ctx context.Context, network, addr string) (c net.Conn, err error) {
+			dialer := &net.Dialer{
+				Timeout:   time.Duration(RequestTimeout) * time.Second,
+				KeepAlive: time.Duration(KeepAliveTimeout) * time.Second,
+			}
+			c, err = dialer.DialContext(ctx, network, addr)
+			return
+		},
+		IdleConnTimeout:   time.Duration(KeepAliveTimeout) * time.Second,
+		ForceAttemptHTTP2: true,
+	}
+
 	client := &http.Client{
-		Timeout: time.Duration(RequestTimeout) * time.Second,
-		Transport: &http2.Transport{
-			AllowHTTP: true,
-			DialTLS: func(network, addr string, cfg *tls.Config) (net.Conn, error) {
-				return net.Dial(network, addr)
-			}}}
+		Transport: transport,
+		Timeout:   time.Duration(KeepAliveTimeout) * time.Second,
+	}
+
 	return client
 }
 
@@ -116,9 +127,16 @@ func main() {
 
 	// 注册消息推送 并发送一次
 	b.Handle("/ddsu", func(c tele.Context) error {
+		// 注册到定时发送列表
 		err := register(c)
+		// 发送一次
 		sendDDsu666(b)
 		return err
+	})
+
+	b.Handle("/stop", func(c tele.Context) error {
+		// 取消注册
+		return unregister(c)
 	})
 
 	// 定时发送
@@ -159,6 +177,25 @@ func register(c tele.Context) error {
 			c.Send(fmt.Sprintf("register failed %v", err))
 		} else {
 			c.Send(fmt.Sprintf("register success"))
+		}
+	}
+	return nil
+}
+
+func unregister(c tele.Context) error {
+	chatId := c.Chat().ID
+	channelList, err := readChannelList(CollectionList, ChatListKey)
+	if err != nil {
+		log.Println(fmt.Sprintf("read db err %v", err))
+		c.Send(fmt.Sprintf("unregister failed %v", err))
+	} else {
+		delete(channelList.ChatId, chatId)
+		err := writeChannelList(CollectionList, ChatListKey, channelList)
+		if err != nil {
+			log.Println(fmt.Sprintf("read db err %v", err))
+			c.Send(fmt.Sprintf("unregister failed %v", err))
+		} else {
+			c.Send(fmt.Sprintf("unregister success"))
 		}
 	}
 	return nil
