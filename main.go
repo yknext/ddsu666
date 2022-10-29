@@ -93,9 +93,11 @@ func main() {
 		return c.Send("Hello!")
 	})
 
-	// 注册电表
+	// 注册消息推送 并发送一次
 	b.Handle("/ddsu", func(c tele.Context) error {
-		return register(c)
+		err := register(c)
+		sendDDsu666(b)
+		return err
 	})
 
 	// 定时发送
