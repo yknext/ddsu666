@@ -217,7 +217,7 @@ func GetPowerData() (string, error) {
 	startTime := time.Now()
 	for _, sensorId := range sensorIdList {
 		requestURL := fmt.Sprintf("%s%s", HttpPrefix, sensorId)
-		res, err := http.Get(requestURL)
+		res, err := httpClient.Get(requestURL)
 		if err != nil {
 			log.Printf("error making http request: %s\n", err)
 		} else {
