@@ -1,0 +1,17 @@
+version: '2'
+services:
+  ddsu666:
+    build: .
+    container_name: ddsu666
+    restart: always
+    network_mode: host
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /data/ddsu666:/data/config
+    environment:
+      # ask BotFather
+      TOKEN: 'telegram bot api'
+      # cron with second
+      CRON_SPEC: '10 */1 * * * ?'
+      # esphome esp32-c3 address
+      HTTP_PREFIX: 'https://example.com/sensor/'
