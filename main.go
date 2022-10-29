@@ -1,16 +1,18 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	scribble "github.com/nanobox-io/golang-scribble"
 	"github.com/robfig/cron/v3"
+	"golang.org/x/net/http2"
 	tele "gopkg.in/telebot.v3"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -20,6 +22,10 @@ var (
 	ChatListKey    = "chatList"
 	TimeLocal, _   = time.LoadLocation("Asia/Shanghai")
 	HttpPrefix     = "http://192.168.200.6/sensor/"
+
+	httpClient         *http.Client
+	MaxIdleConnections int = 20
+	RequestTimeout     int = 30
 )
 
 type ChannelList struct {
@@ -30,6 +36,21 @@ type SensorData struct {
 	Id    string  `json:"id,omitempty"`
 	Value float64 `json:"value,omitempty"`
 	State string  `json:"state,omitempty"`
+}
+
+func init() {
+	httpClient = createHttClient()
+}
+
+func createHttClient() *http.Client {
+	client := &http.Client{
+		Timeout: time.Duration(RequestTimeout) * time.Second,
+		Transport: &http2.Transport{
+			AllowHTTP: true,
+			DialTLS: func(network, addr string, cfg *tls.Config) (net.Conn, error) {
+				return net.Dial(network, addr)
+			}}}
+	return client
 }
 
 func readChannelList(collection, key string) (ChannelList, error) {
@@ -193,30 +214,23 @@ func GetPowerData() (string, error) {
 		"p2_s":    "备电表伏安: %s",
 		"p2_u":    "备电表电压: %s",
 	}
-	var wg sync.WaitGroup
+	startTime := time.Now()
 	for _, sensorId := range sensorIdList {
-		wg.Add(1)
-		go func(id string) {
-			requestURL := fmt.Sprintf("%s%s", HttpPrefix, id)
-			res, err := http.Get(requestURL)
+		requestURL := fmt.Sprintf("%s%s", HttpPrefix, sensorId)
+		res, err := http.Get(requestURL)
+		if err != nil {
+			log.Printf("error making http request: %s\n", err)
+		} else {
+			sen := &SensorData{}
+			err := json.NewDecoder(res.Body).Decode(sen)
 			if err != nil {
-				log.Printf("error making http request: %s\n", err)
-			} else {
-				sen := &SensorData{}
-				err := json.NewDecoder(res.Body).Decode(sen)
-				if err != nil {
-					log.Printf("error decode http response: %s\n", err)
-					return
-				}
-				sensorMap[id] = sen
+				log.Printf("error decode http response: %s\n", err)
 			}
-			wg.Done()
-		}(sensorId)
+			sensorMap[sensorId] = sen
+		}
 	}
-	wg.Wait()
-
 	// 采样时间
-	var timeStr = fmt.Sprintf("%s: %s\n", "采样时间", time.Now().In(TimeLocal).Format("2006-01-02 15:04:05"))
+	var timeStr = fmt.Sprintf("采样时间: %s\n耗时: %v\n", time.Now().In(TimeLocal).Format("2006-01-02 15:04:05"), time.Since(startTime))
 	resultMessage := []string{timeStr}
 
 	// 合并数据标题
